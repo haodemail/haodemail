@@ -1,2 +1,2 @@
-# haodemail
-postfix toolkit, including virtual user, queue manager, log search, and so on...
+# partner
+postfix &amp; dovecot  configure manager
