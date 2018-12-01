@@ -1,4 +1,3 @@
-<script src="../router/index.js"></script>
 <template>
   <div class="home">
     <Row class="header" type="flex" theme="dark" align="middle">
