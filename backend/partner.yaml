@@ -1,0 +1,9 @@
+WebServer:
+  Listen: 127.0.0.1:8000
+
+MySQL:
+  Host: 127.0.0.1
+  Port: 3306
+  Username: postfix
+  Password: postfix%pass
+  Database: postfix

@@ -13,7 +13,7 @@
                 <Row>
                     <Col :span="12">
                         <FormItem label="Max Users" prop="maxUsers">
-                            <Input :max="10000" :min="1" v-model="addForm.maxUsers"></Input>
+                            <Input :max="100" :min="1" v-model="addForm.maxUsers"></Input>
                         </FormItem>
                     </Col>
                     <Col :span="12">
@@ -42,8 +42,6 @@
 </template>
 
 <script>
-    import {addDomainAPI, listDomainAPI} from "../api"
-
     var moment = require('moment');
 
     export default {
@@ -64,6 +62,7 @@
                     maxQuota:1024000,
                     expireTime:new Date(2019,12,30),
                 },
+                ruleValidateAddForm:{},
                 tableColumns: [
                     {
                         title: '',
@@ -190,7 +189,7 @@
                 that.loading = false;
                 that.$refs["addForm"].validate(valid => {
                     if (valid) {
-                        addDomainAPI(that.addForm).then((res) => {
+                      $http.get(`/api`, { params: params }).then((res) => {
                             if (res.data.ok == true) {
                                 let domainData = res.data.data
                                 that.AllData.unshift(domainData)
