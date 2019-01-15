@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"fmt"
+	"errors"
 	"net/http"
 
 	"../models"
@@ -19,11 +19,6 @@ func comparePasswords(hashedPwd string, plainPwd string) bool {
 	return true
 }
 
-// HandleIndex
-func HandleIndex(c *gin.Context) {
-	c.String(http.StatusOK, "Please talk to me with api!!")
-}
-
 // HandleLogin login system user
 func HandleLogin(c *gin.Context) {
 	type paramsBody struct {
@@ -37,10 +32,17 @@ func HandleLogin(c *gin.Context) {
 	var resp ResponseData
 	var reqInfo params
 	err := c.BindJSON(&reqInfo)
-	CheckError(c, err)
+	if CheckError(c, err) {
+		return
+	}
 	if reqInfo.Params.Username != "" && reqInfo.Params.Password != "" {
+		if reqInfo.Params.Username != "postmaster@"+models.Config.MailServer.PrimaryDomain {
+			err = errors.New("access denied")
+		}
+		if CheckError(c, err) {
+			return
+		}
 		user, err := models.DaoGetVirtualUserByName(reqInfo.Params.Username)
-		fmt.Println(user, err)
 		if err == nil {
 			if comparePasswords(user.Password, reqInfo.Params.Password) {
 				token, err := utils.GenerateToken(user.UserName)
@@ -50,6 +52,9 @@ func HandleLogin(c *gin.Context) {
 				resp.Data = map[string]string{
 					"token": token,
 				}
+			} else {
+				resp.OK = false
+				resp.Info = "Authentication failed"
 			}
 		}
 	} else {

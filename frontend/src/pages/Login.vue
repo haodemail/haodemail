@@ -1,17 +1,20 @@
 <template>
+  <div>
   <Form ref="loginForm" :model="loginForm" :rules="rules" @keydown.enter.native="handleSubmit">
     <Row class="login vm-panel">
-      <Col span="8" offset="8" class="login-form">
+      <Col span="6" offset="9" class="login-form">
         <div class="login-header">
-          <img src="../assets/img/logo.png" height="80" alt="">
-          <h1>Welcome To Partner of Postfix</h1>
+          <img src="../assets/img/postfix.jpg" height="200" alt="">
+          <h1><br>Welcome To Partner of Postfix</h1>
         </div>
         <div class="login-form">
+          <Alert type="error" v-show="errorMsg.length>0">{{errorMsg}}</Alert>
           <form-item prop="username">
-            <Input v-model="loginForm.username" placeholder="please enter username"></Input>
+            <Input prefix="ios-contact" v-model="loginForm.username" placeholder="please enter username"></Input>
           </form-item>
           <form-item prop="password">
-            <Input v-model="loginForm.password" type="password" placeholder="Please enter password"></Input>
+            <Input prefix="ios-lock" v-model="loginForm.password" type="password"
+                   placeholder="Please enter password"></Input>
           </form-item>
           <Button type="primary" @click="handleSubmit">Login</Button>
         </div>
@@ -21,6 +24,8 @@
       </Col>
     </Row>
   </Form>
+  <Footer class="layout-footer-center footer">2013-2018 &copy; HaodeMail.Com</Footer>
+  </div>
 </template>
 <script>
   import APIManger from "../api/"
@@ -28,8 +33,9 @@
   export default {
     data: function () {
       return {
+        errorMsg: "",
         loginForm: {
-          username: 'admin@haodemail.com',
+          username: 'postmaster@haodemail.com',
           password: 'postfix123'
         },
         rules: {
@@ -45,31 +51,26 @@
     methods: {
       handleSubmit() {
         let that = this
+        that.errorMsg = ""
         that.$refs["loginForm"].validate(valid => {
           if (valid) {
             APIManger.login(that.loginForm).then(resp => {
               let info = resp.data.info;
               let ok = resp.data.ok;
               let data = resp.data.data;
-              let token = data.token;
               if (!ok) {
-                that.$Message.error({
-                  content: info,
-                  duration: 5
-                });
+                that.errorMsg = info
               } else {
+                let token = data.token;
                 sessionStorage.setItem("JWT_TOKEN", token);
                 sessionStorage.setItem("username", that.loginForm.username);
                 that.$router.push({path: "/"});
               }
             }).catch(function (err) {
-              that.$Message.error({
-                content: err.toString(),
-                duration: 5
-              });
+              that.errorMsg=  err.toString()
             });
           } else {
-            that.$Message.error("invalid form!");
+            that.errorMsg = "invalid form"
           }
         });
       }
@@ -78,11 +79,20 @@
 </script>
 
 <style>
+  .login-header {
+    margin-top: 35px;
+  }
   .login-form {
-    margin-top: 50px;
+    margin-top: 30px;
   }
 
   .login-footer {
     margin-top: 20px;
+  }
+
+  .footer {
+    position: absolute;
+    bottom: 0px;
+    width: 100%;
   }
 </style>

@@ -6,6 +6,13 @@ import (
 	"io/ioutil"
 )
 
+type MailServer struct {
+	PrimaryDomain            string `yaml:"PrimaryDomain"`
+	GlobalDomainMaxUserCount int    `yaml:"GlobalDomainMaxUserCount"`
+	GlobalDomainMaxUserQuota int    `yaml:"GlobalDomainMaxUserQuota"`
+	GlobalDomainMaxMailCount int    `yaml:"GlobalDomainMaxMailCount"`
+}
+
 // WebServer
 type WebServer struct {
 	Listen string `yaml:"Listen"`
@@ -22,8 +29,9 @@ type MySQL struct {
 
 // ServerConfig
 type ServerConfig struct {
-	WebServer WebServer `yaml:"WebServer"`
-	MySQL     MySQL     `yaml:"MySQL"`
+	MailServer MailServer `yaml:"MailServer"`
+	WebServer  WebServer  `yaml:"WebServer"`
+	MySQL      MySQL      `yaml:"MySQL"`
 }
 
 // InitConfig

@@ -55,6 +55,7 @@ func DaoCreateVirtualAlias(domain VirtualDomain, source string, destination stri
 	user.ExpireTime = expireTime
 	if err := tx.Create(&domain).Error; err != nil {
 		tx.Rollback()
+		return VirtualAlias{}, err
 	}
 	tx.Commit()
 	return

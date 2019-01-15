@@ -53,10 +53,15 @@ class APIManager {
   }
 
   login(params) {
-    return this.$http.post(`/login`, { params: params })
+    return this.$http.post("login", { params: params })
   }
-  logout(params) {
-    return this.$http.post(`/logout`, { params: params })
+
+  // account manager
+  createDomain(params) {
+    return this.$http.post("api/domain/create", { params: params })
+  }
+  listDomain(params) {
+    return this.$http.post("api/domain/list", { params: params })
   }
 }
 

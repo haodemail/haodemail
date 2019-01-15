@@ -1,3 +1,9 @@
+MailServer:
+  PrimaryDomain: haodemail.com
+  GlobalDomainMaxUserCount: -1
+  GlobalDomainMaxUserQuota: -1
+  GlobalDomainMaxMailCount: -1
+
 WebServer:
   Listen: 127.0.0.1:8000
 

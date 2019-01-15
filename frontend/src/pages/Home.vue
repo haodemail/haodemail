@@ -3,11 +3,11 @@
     <div class="header" type="flex" theme="dark" align="middle">
       <div class="logo">
         <img src="../assets/img/logo.png" height="30" alt="">
-        <span>Make Mail Easy, Make Postfix Power</span>
+        <span>Make Postfix More Powerful</span>
       </div>
       <div class="logout">
-        <Button type="primary" @click="logout">
-          <icon type="ios-exit-outline" style="font-size: 16px; margin-right: 2px"/>
+        <Button type="default" @click="logout">
+          <icon type="md-exit" style="font-size: 13px; margin-right: 2px"/>
           Logout {{loginUser}}
         </Button>
       </div>

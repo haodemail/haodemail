@@ -1,244 +1,339 @@
 <template>
-    <div>
-        <br>
-        <Modal v-model="showAddForm" :loading="loading" title="Add Domain" @on-ok="submitAdd">
-            <Form :label-width="85" ref='addForm' :model='addForm' :rules="ruleValidateAddForm">
-                <Row>
-                    <Col :span="24">
-                        <FormItem label="Domain Name" prop="domain">
-                            <Input v-model="addForm.domain"></Input>
-                        </FormItem>
-                    </Col>
-                </Row>
-                <Row>
-                    <Col :span="12">
-                        <FormItem label="Max Users" prop="maxUsers">
-                            <Input :max="100" :min="1" v-model="addForm.maxUsers"></Input>
-                        </FormItem>
-                    </Col>
-                    <Col :span="12">
-                        <FormItem label="Max Quota" prop="maxQuota">
-                            <Input :max="102400" :min="1024" v-model="addForm.maxQuota"></Input>
-                        </FormItem>
-                    </Col>
-                </Row>
-                <Row>
-                    <Col :span="24">
-                        <FormItem label="Expire Time" prop="expireTime">
-                            <DatePicker v-model="addForm.expireTime" type="date" placeholder=""></DatePicker>
-                        </FormItem>
-                    </Col>
-                </Row>
-            </Form>
-        </Modal>
-        <Form align="left" :label-width="80" ref='searchForm' :model='searchForm' inline>
-            <Button type="primary" @click="showAddForm=true">Add Domain</Button>
-            <Input v-model="searchForm.keyword" placeholder="Input Domain Name" style="width: 350px"/>
-            <Button type="success" @click="getDomainList">Search</Button>
-        </Form>
-        <br>
-        <Table stripe :columns="tableColumns" :data="tableData"></Table>
-    </div>
+  <div>
+    <br>
+    <Modal v-model="showAddForm" :loading="loading" :title="titleNew" @on-ok="submitAdd">
+      <Form :label-width="120" ref='addForm' :model='addForm' :rules="ruleValidateAddForm">
+        <Row>
+          <Col :span="24">
+            <FormItem label="Domain Name" prop="domain">
+              <Input v-model="addForm.domain" :disabled="modifyDomain"></Input>
+            </FormItem>
+          </Col>
+        </Row>
+        <Row>
+          <Col :span="24">
+            <FormItem label="Postmaster Password" :label-width="150" prop="password">
+              <Input v-model="addForm.password"></Input>
+            </FormItem>
+          </Col>
+        </Row>
+        <Row>
+          <Col :span="12">
+            <FormItem label="Max Users" prop="maxUserCount">
+              <InputNumber :max="1000" :min="1" v-model="addForm.maxUserCount" style="width: 100%"></InputNumber>
+            </FormItem>
+          </Col>
+          <Col :span="12">
+            <FormItem label="Max Quota(M)" prop="maxUserQuota">
+              <InputNumber :max="10000" :min="-1" :step="100" v-model="addForm.maxUserQuota" style="width: 100%"></InputNumber>
+            </FormItem>
+          </Col>
+        </Row>
+        <Row>
+          <Col :span="12">
+            <FormItem label="Max Mails" prop="maxMailCount">
+              <InputNumber :max="10000" :min="-1" :step="100" v-model="addForm.maxMailCount" style="width: 100%"></InputNumber>
+            </FormItem>
+          </Col>
+          <Col :span="12">
+            <FormItem label="Expire Time" prop="expireTime">
+              <DatePicker v-model="addForm.expireTime" type="date" :options="greatNow" placeholder=""></DatePicker>
+            </FormItem>
+          </Col>
+        </Row>
+      </Form>
+    </Modal>
+    <Form align="left" :label-width="80" ref='searchForm' :model='searchForm' inline>
+      <Button icon="md-add" type="primary" @click="prepareAdd">Add Domain</Button>
+      <FormItem :label-width="0">
+        <Input v-model="searchForm.domain" search enter-button="Search" @on-search="getDomainList" placeholder="Input Domain Name"
+               style="width: 380px"/>
+      </FormItem>
+    </Form>
+    <Table stripe :columns="tableColumns" :data="tableData"></Table>
+  </div>
 </template>
 
 <script>
-    var moment = require('moment');
+  import APIManger from "../api/"
 
-    export default {
-        name: 'Domain',
-        components: {},
-        data() {
-            return {
-                showAddForm: false,
-                loading: false,
-                pageSize:15,
-                page:1,
-                searchForm: {
-                    keyword: "",
-                },
-                addForm: {
-                    domain:"",
-                    maxUsers:10,
-                    maxQuota:1024000,
-                    expireTime:new Date(2019,12,30),
-                },
-                ruleValidateAddForm:{},
-                tableColumns: [
-                    {
-                        title: '',
-                        key: 'id',
-                        width: 50,
-                    },
-                    {
-                        title: 'Domain Name',
-                        key: 'domain',
-                        sortable: true
-                    },
-                    {
-                        title: 'Total Users',
-                        key: 'totalUsers',
-                        width: 120,
-                        sortable: true
-                    },
-                    {
-                        title: 'Total Quota',
-                        key: 'totalQuota',
-                        width: 120,
-                        sortable: true
-                    },
-                    {
-                        title: 'Total Mails',
-                        key: 'totalMails',
-                        width: 120,
-                        sortable: true
-                    },
-                    {
-                        title: 'Create Time',
-                        key: 'createTime',
-                        sortable: true
-                    },
-                    {
-                        title: 'Operation',
-                        key: '',
-                        width: 200,
-                        align: 'center',
-                        render: (h, params) => {
-                            return h("div", [
-                                h(
-                                    "Button", {
-                                        props: {
-                                            type: "info",
-                                            size: "small",
-                                        },
-                                        style: {
-                                            marginRight: '5px'
-                                        },
-                                        on: {
-                                            click: () => {
-                                            }
-                                        }
-                                    },
-                                    "Configure"
-                                ),
-                                h(
-                                    "Button", {
-                                        props: {
-                                            type: "error",
-                                            size: "small",
-                                        },
-                                        on: {
-                                            click: () => {
-                                            }
-                                        }
-                                    },
-                                    "Delete"
-                                ),
+  let moment = require('moment');
 
-                            ]);
-                        }
-                    }
-                ],
-                allData:[],
-                tableData: [
-                    {
-                        id: 1,
-                        domain: 'haodemail.com',
-                        totalUsers: 100,
-                        totalQuota: 10240000,
-                        totalMails: 30000,
-                        createTime: new Date(),
-                    },
-                    {
-                        id: 2,
-                        domain: 'haodemail.com',
-                        totalUsers: 100,
-                        totalQuota: 10240000,
-                        totalMails: 30000,
-                        createTime: new Date(),
-                    },
-                    {
-                        id: 3,
-                        domain: 'haodemail.com',
-                        totalUsers: 100,
-                        totalQuota: 10240000,
-                        totalMails: 30000,
-                        createTime: new Date(),
-                    },
-                    {
-                        id: 4,
-                        domain: 'haodemail.com',
-                        totalUsers: 100,
-                        totalQuota: 10240000,
-                        totalMails: 30000,
-                        createTime: new Date(),
-                    },
-                    {
-                        id: 5,
-                        domain: 'haodemail.com',
-                        totalUsers: 100,
-                        totalQuota: 10240000,
-                        totalMails: 30000,
-                        createTime: new Date(),
-                    },
-                ]
+  export default {
+    name: 'Domain',
+    components: {},
+    data() {
+      var validPassword = (rule, value, callback) => {
+        let that = this
+        if (!that.modifyDomain) {
+          if (value.length < 8 || value.length > 16) {
+            return callback(new Error("password must be 8-16 characters"))
+          }
+          let score = 0
+          if (/\d/.test(value)) score++;
+          if (/[a-z]/.test(value)) score++;
+          if (/[A-Z]/.test(value)) score++;
+          if (/\W/.test(value)) score++;
+          if (score < 3) {
+            return callback(new Error("Must contain uppercase, lowercase, and number"))
+          }
+        }
+        callback()
+      };
+      return {
+        showAddForm: false,
+        modifyDomain: false,
+        loading: true,
+        pageSize: 20,
+        page: 1,
+        allData: [],
+        tableData: [],
+        searchForm: {
+          domain: "",
+          orderBy: "createTime",
+          orderSort: "desc",
+        },
+        titleNew: "Create A New Domain",
+        addForm: {
+          id: "",
+          domain: "",
+          password: "",
+          maxUserCount: 10,
+          maxUserQuota: 1000,
+          maxMailCount: 1000,
+          expireTime: new Date(2019, 12, 30),
+        },
+        greatNow: {
+          disabledDate(date) {
+            return date && date.valueOf() < Date.now() + 86400000;
+          }
+        },
+        ruleValidateAddForm: {
+          domain: [
+            {
+              required: true,
+              type: "string",
+              message: "Please input domain",
+              trigger: "blur"
             }
-        },
-        methods: {
-            submitAdd() {
-                let that = this
-                that.loading = false;
-                that.$refs["addForm"].validate(valid => {
-                    if (valid) {
-                      $http.get(`/api`, { params: params }).then((res) => {
-                            if (res.data.ok == true) {
-                                let domainData = res.data.data
-                                that.AllData.unshift(domainData)
-                                that.tableData.unshift(domainData)
-                                that.tableData.pop()
-                                that.showAddForm = false;
-                                that.$Message.success(res.data.info)
-                            } else {
-                                that.$Message.info(res.data.info)
-                            }
-                        }).catch(function (err) {
-                            self.$Message.error({
-                                content: resp.data.info,
-                                duration: 5
-                            });
-                        });
-                    } else {
-                        setTimeout(() => {
-                            that.loading = true;
-                        }, 0);
-                    }
-                });
-            },
-            
-            getDomainList() {
-                let that = this
-                let para = {
-                    keyword: this.searchForm.keyword,
-                    pagesize: that.pageSize,
-                    page: that.page,
-                }
-                listDomainAPI(para).then((res) => {
-                    if (res.data.ok == true) {
-                        if (res.data.data) {
-                            that.alldata = res.data.data
-                            that.tableData = that.allData.slice(0, that.pageSize);
-                            that.page = 1
-                        } else {
-                            this.allData = []
-                            this.tableData = []
-                            this.page = 1
-                        }
-                    }
-                })
-            },
+          ],
+          password: [
+            {
+              validator: validPassword,
+              trigger: "blur"
+            }
+          ],
+          maxUserCount: [
+            {
+              required: true,
+              type: "number",
+              message: "Please input max users",
+              trigger: "blur"
+            }
+          ],
+          maxUserQuota: [
+            {
+              required: true,
+              type: "number",
+              message: "Please input max user quota",
+              trigger: "blur"
+            }
+          ],
+          maxMailCount: [
+            {
+              required: true,
+              type: "number",
+              message: "Please input max user quota",
+              trigger: "blur"
+            }
+          ],
 
         },
-        mounted() {
-            this.getDomainList();
+        tableColumns: [
+          {
+            title: 'Domain Name',
+            key: 'domain',
+            sortable: true
+          }, {
+            title: 'Users',
+            key: 'userCount',
+            width: 120,
+            sortable: true,
+            render: (h, params) => {
+              let c = params.row.maxUserCount
+              if (c < 0) {
+                c = "unlimited"
+              }
+              return h("span", params.row.userCount + "/" + c)
+            }
+          }, {
+            title: 'Quota',
+            key: 'userQuota',
+            width: 120,
+            sortable: true,
+            render: (h, params) => {
+              let c = params.row.maxUserQuota
+              if (c < 0) {
+                c = "unlimited"
+              }
+              return h("span", params.row.userQuota + "/" + c)
+            }
+          }, {
+            title: 'Mails',
+            key: 'mailCount',
+            width: 120,
+            sortable: true,
+            render: (h, params) => {
+              let c = params.row.maxMailCount
+              if (c < 0) {
+                c = "unlimited"
+              }
+              return h("span", params.row.mailCount + "/" + c)
+            }
+          }, {
+            title: 'Create Time',
+            key: 'createTime',
+            sortable: true,
+            render: (h, params) => {
+              return h("span", moment(params.row.createTime).format("YYYY-MM-DD HH:MM"))
+            }
+          }, {
+            title: 'Operation',
+            key: '',
+            width: 120,
+            align: 'center',
+            render: (h, params) => {
+              return h('div', [
+                h('Icon', {
+                  props: {
+                    type: 'ios-create'
+                  },
+                  style: {
+                    fontSize: '20px',
+                    color: '#559DF9',
+                    cursor: "pointer",
+                  },
+                  on: {
+                    click: () => {
+                      let that = this
+                      that.showAddForm = true
+                      that.modifyDomain = true
+                      that.titleNew = "Modify Domain Property"
+                      that.addForm.domain = params.row.domain
+                      that.addForm.maxUserCount = params.row.maxUserCount
+                      that.addForm.maxUserQuota = params.row.maxUserQuota
+                      that.addForm.maxMailCount = params.row.maxUserQuota
+                      that.addForm.expireTime = params.row.expireTime
+                    }
+                  }
+                }),
+                h('Icon', {
+                  props: {
+                    type: 'ios-trash'
+                  },
+                  style: {
+                    fontSize: '20px',
+                    color: '#ed4014',
+                    cursor: "pointer",
+                  },
+                  on: {
+                    click: () => {
+                      // let para = {
+                      //   url: params.row.url
+                      // }
+                      // deleteBlackURLAPI(para).then((res) => {
+                      //   if (res.data.ok == true) {
+                      //     that.$Message.success(res.data.info)
+                      //     that.getBlackURLList()
+                      //   } else {
+                      //     that.$Message.info(res.data.info)
+                      //   }
+                      // }).catch(function (err) {
+                      //   that.$Message.error({
+                      //     content: err.toString(),
+                      //     duration: 5
+                      //   });
+                      // });
+                    }
+                  }
+                }),
+              ])
+            },
+          }],
+      };
+    },
+    methods:
+      {
+        prepareAdd() {
+          let that = this
+          that.showAddForm = true
+          that.modifyDomain = false
+          that.titleNew = 'Create A New Domain'
+          that.addForm.id = ""
+          that.addForm.domain = "test126.com"
+          that.addForm.password = "123abcD$"
+          that.addForm.maxUserCount = -1
+          that.addForm.maxUserQuota = -1
+          that.addForm.maxMailCount = -1
+          that.addForm.expireTime = ""
         },
+        submitAdd() {
+          let that = this
+          that.loading = false;
+          that.$refs["addForm"].validate(valid => {
+            if (valid) {
+              APIManger.createDomain(that.addForm).then((res) => {
+                if (res.data.ok == true) {
+                  that.showAddForm = false;
+                  that.$Message.success(res.data.info)
+                } else {
+                  that.$Message.error({
+                    content: res.data.info,
+                    duration: 5
+                  })
+                }
+              }).catch(function (err) {
+                that.$Message.error({
+                  content: err.toString(),
+                  duration: 5
+                });
+              });
+            } else {
+              setTimeout(() => {
+                that.loading = false;
+              }, 0);
+            }
+          });
+        }
+        ,
+
+        getDomainList() {
+          let that = this
+          let para = {
+            domain: this.searchForm.domain,
+            orderBy: this.searchForm.orderBy + " " + this.searchForm.orderSort
+          }
+          APIManger.listDomain(para).then((res) => {
+            if (res.data.ok == true) {
+              if (res.data.data) {
+                that.allData = res.data.data
+                that.tableData = that.allData.slice(0, that.pageSize);
+                that.page = 1
+              } else {
+                that.allData = []
+                that.tableData = []
+                that.page = 1
+              }
+            }
+          })
+        }
+        ,
+
+      }
+    ,
+    mounted() {
+      this.getDomainList();
     }
+    ,
+  }
 </script>

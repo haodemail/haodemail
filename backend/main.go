@@ -4,11 +4,10 @@ import (
 	"./controllers"
 	"./middleware"
 	"./models"
+	"github.com/gin-gonic/gin"
 	"io"
 	"log"
 	"os"
-
-	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -28,14 +27,14 @@ func main() {
 
 	router.GET("/", controllers.HandleIndex)
 	router.POST("/login", controllers.HandleLogin)
-	router.GET("/logout", controllers.HandleLogout)
 
 	// dashboard api
 	api := router.Group("/api")
 	api.Use(middleware.JWT())
 	{
-		// user
-
+		// account manager
+		api.POST("/domain/create", controllers.HandleCreateDomain)
+		api.POST("/domain/list", controllers.HandleListDomain)
 	}
 
 	router.Run(models.Config.WebServer.Listen)

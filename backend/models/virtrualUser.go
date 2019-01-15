@@ -2,7 +2,6 @@ package models
 
 import (
 	"errors"
-	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"time"
 
@@ -68,7 +67,6 @@ func DaoCreateVirtualUser(domain VirtualDomain, userName string, password string
 		return user, errors.New("alias with that name exists")
 	}
 	tx := db.Begin()
-	fmt.Println("domain is", domain)
 	user.DomainID = domain.ID
 	user.UserName = userName
 	user.Password = HashAndSalt(password)
@@ -77,8 +75,8 @@ func DaoCreateVirtualUser(domain VirtualDomain, userName string, password string
 	user.CreateTime = time.Now()
 	user.ExpireTime = expireTime
 	if err := tx.Create(&user).Error; err != nil {
-		fmt.Println(err)
 		tx.Rollback()
+		return VirtualUser{}, err
 	}
 	tx.Commit()
 	return

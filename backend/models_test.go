@@ -7,9 +7,9 @@ import (
 )
 
 func TestCreateVirtualDomain(t *testing.T) {
-	_, err := models.DaoCreateVirtualDomain("haodemail.com", time.Now().Add(time.Hour*time.Duration(24*365*10)))
+	_, err := models.DaoCreateVirtualDomain("163.com", "1234AbcdR", 100, 1000000000, 100000, time.Now().Add(time.Hour*time.Duration(24*365*10)))
 	if err == nil {
-		t.Log("create domain haodemail.com ok")
+		t.Log("create domain 163.com ok")
 	} else {
 		t.Fatal("create domain failed", err)
 	}
