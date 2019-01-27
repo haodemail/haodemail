@@ -21,6 +21,7 @@
     "vm-editor": "^0.1.6",
     "vue": "^2.5.17",
     "vue-axios": "^2.1.4",
+    "vue-moment": "^4.0.0",
     "vue-route": "^1.5.1",
     "vue-router": "^3.0.2",
     "vuex": "^3.0.1"

@@ -5,12 +5,18 @@
         <img src="../assets/img/logo.png" height="30" alt="">
         <span>Make Postfix More Powerful</span>
       </div>
-      <div class="logout">
-        <Button type="default" @click="logout">
-          <icon type="md-exit" style="font-size: 13px; margin-right: 2px"/>
-          Logout {{loginUser}}
-        </Button>
-      </div>
+      <Dropdown class="logout">
+        <a href="javascript:void(0)">
+          <Avatar style="background-color: #87d068;color:#ffffff">
+            <Icon type="md-person" style="font-size:32px"/>
+          </Avatar>
+        </a>
+        <DropdownMenu slot="list">
+          <DropdownItem>
+            <a @click="logout">logout {{loginUser}}</a>
+          </DropdownItem>
+        </DropdownMenu>
+      </Dropdown>
     </div>
     <div class="sidebar">
       <Menu width="100%" class="menu" :active-name="activeName" :accordion="true">
@@ -20,10 +26,10 @@
             Dashboard
           </router-link>
         </Menu-item>
-        <Menu-item name="Accounts">
-          <router-link to="/account">
+        <Menu-item name="Domains">
+          <router-link to="/domain">
             <i class="fa fa-user"></i>
-            Accounts
+            Domains
           </router-link>
         </Menu-item>
         <Menu-item name="Configure">

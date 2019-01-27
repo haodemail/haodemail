@@ -4,16 +4,20 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/rand"
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"math/rand"
+	"io"
+	mrand "math/rand"
 	"strconv"
+	"strings"
 	"time"
 )
 
 const SECRETKEY = "KoR7JcF947b1HMcD"
 
+//使用PKCS7进行填充，IOS也是7
 func PKCS7Padding(ciphertext []byte, blockSize int) []byte {
 	padding := blockSize - len(ciphertext)%blockSize
 	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
@@ -26,50 +30,96 @@ func PKCS7UnPadding(origData []byte) []byte {
 	return origData[:(length - unpadding)]
 }
 
-func AesEncrypt(origData, key []byte) ([]byte, error) {
+//aes加密，填充秘钥key的16位，24,32分别对应AES-128, AES-192, or AES-256.
+func AesCBCEncrypt(rawData, key []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
+
+	//填充原文
 	blockSize := block.BlockSize()
-	origData = PKCS7Padding(origData, blockSize)
-	blockMode := cipher.NewCBCEncrypter(block, key[:blockSize])
-	crypted := make([]byte, len(origData))
-	blockMode.CryptBlocks(crypted, origData)
-	return crypted, nil
+	rawData = PKCS7Padding(rawData, blockSize)
+	//初始向量IV必须是唯一，但不需要保密
+	cipherText := make([]byte, blockSize+len(rawData))
+	//block大小 16
+	iv := cipherText[:blockSize]
+	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+		panic(err)
+	}
+
+	//block大小和初始向量大小一定要一致
+	mode := cipher.NewCBCEncrypter(block, iv)
+	mode.CryptBlocks(cipherText[blockSize:], rawData)
+
+	return cipherText, nil
 }
 
-func AesDecrypt(crypted, key []byte) ([]byte, error) {
+func AesCBCDncrypt(encryptData, key []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
+
 	blockSize := block.BlockSize()
-	blockMode := cipher.NewCBCDecrypter(block, key[:blockSize])
-	origData := make([]byte, len(crypted))
-	blockMode.CryptBlocks(origData, crypted)
-	origData = PKCS7UnPadding(origData)
-	return origData, nil
+
+	if len(encryptData) < blockSize {
+		panic("ciphertext too short")
+	}
+	iv := encryptData[:blockSize]
+	encryptData = encryptData[blockSize:]
+
+	// CBC mode always works in whole blocks.
+	if len(encryptData)%blockSize != 0 {
+		panic("ciphertext is not a multiple of the block size")
+	}
+
+	mode := cipher.NewCBCDecrypter(block, iv)
+
+	// CryptBlocks can work in-place if the two arguments are the same.
+	mode.CryptBlocks(encryptData, encryptData)
+	//解填充
+	encryptData = PKCS7UnPadding(encryptData)
+	return encryptData, nil
+}
+
+func AesEncrypt(rawData string, key []byte) (string, error) {
+	data, err := AesCBCEncrypt([]byte(rawData), key)
+	if err != nil {
+		return "", err
+	}
+	return base64.StdEncoding.EncodeToString(data), nil
+}
+
+func AesDecrypt(rawData string, key []byte) (string, error) {
+	data, err := base64.StdEncoding.DecodeString(rawData)
+	if err != nil {
+		return "", err
+	}
+	dnData, err := AesCBCDncrypt(data, key)
+	if err != nil {
+		return "", err
+	}
+	return string(dnData), nil
 }
 
 func EncryptPrimaryKey(pk string) (secret string, err error) {
 	tm := time.Now().Unix()
-	rand.Seed(tm * 2)
-	pk = fmt.Sprintf("%s|%s|%d", RandomString(rand.Intn(10)), pk, tm)
-	result, err := AesEncrypt([]byte(pk), []byte(SECRETKEY))
+	mrand.Seed(tm * 2)
+	pk = fmt.Sprintf("%s|%s|%d", RandomString(mrand.Intn(10)), pk, tm)
+	secret, err = AesEncrypt(pk, []byte(SECRETKEY))
 	if err != nil {
 		return
 	}
-	secret = Quote(base64.StdEncoding.EncodeToString(result))
 	return
 }
 
 func DecryptPrimaryKey(secret string) (pk string, err error) {
-	pks, err := AesDecrypt([]byte(secret), []byte(SECRETKEY))
-	m := bytes.SplitAfterN(pks, []byte("|"), 3)
+	pks, err := AesDecrypt(secret, []byte(SECRETKEY))
+	m := strings.SplitN(pks, "|", 3)
 	if len(m) == 3 {
-		if tm, err := strconv.Atoi(string(m[2])); err == nil && int64(tm)+3600 < time.Now().Unix() {
-			pk = string(m[1])
+		if tm, err := strconv.Atoi(m[2]); err == nil && int64(tm)+3600 > time.Now().Unix() {
+			pk = m[1]
 			return pk, err
 		}
 	}

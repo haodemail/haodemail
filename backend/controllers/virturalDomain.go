@@ -12,6 +12,7 @@ import (
 // HandleCreateDomain create domain
 func HandleCreateDomain(c *gin.Context) {
 	type paramsBody struct {
+		ID           string `json:"id"`
 		Domain       string `json:"domain"`
 		Password     string `json:"password"`
 		MaxUserCount int    `json:"maxUserCount"`
@@ -59,7 +60,7 @@ func HandleCreateDomain(c *gin.Context) {
 		Length: len(reqInfo.Params.Password),
 	}
 	passValidator.ProcessPassword()
-	if passValidator.Score < 4 {
+	if passValidator.Score < 4 && reqInfo.Params.ID == "" {
 		err = errors.New("weak password, must contain upper and special character")
 	}
 	if CheckError(c, err) {
@@ -74,17 +75,46 @@ func HandleCreateDomain(c *gin.Context) {
 			expireTime = t
 		}
 	}
-	_, err = models.DaoCreateVirtualDomain(reqInfo.Params.Domain, reqInfo.Params.Password, reqInfo.Params.MaxUserCount,
+	_, err = models.DaoCreateVirtualDomain(reqInfo.Params.ID, reqInfo.Params.Domain, reqInfo.Params.Password, reqInfo.Params.MaxUserCount,
 		reqInfo.Params.MaxUserQuota, reqInfo.Params.MaxMailCount, expireTime)
 	if CheckError(c, err) {
 		return
 	}
 	resp.OK = true
-	resp.Info = "create domain " + reqInfo.Params.Domain + " OK"
+	if reqInfo.Params.ID == "" {
+		resp.Info = "create domain " + reqInfo.Params.Domain + " OK"
+	} else {
+		resp.Info = "modify domain " + reqInfo.Params.Domain + " OK"
+	}
 	c.JSON(http.StatusOK, resp)
 }
 
-// HandleCreateDomain create domain
+// HandleDeleteDomain delete domain
+// just set deleted to domain, then remove the mail data sometime
+func HandleDeleteDomain(c *gin.Context) {
+	type paramsBody struct {
+		ID string `json:"id"`
+	}
+	type params struct {
+		Params paramsBody `json:"params"`
+	}
+
+	var resp ResponseData
+	var reqInfo params
+	err := c.BindJSON(&reqInfo)
+	if CheckError(c, err) {
+		return
+	}
+	domain, err := models.DaoDeleteVirtualDomain(reqInfo.Params.ID)
+	if CheckError(c, err) {
+		return
+	}
+	resp.OK = true
+	resp.Info = "delete domain " + domain.Name + " OK"
+	c.JSON(http.StatusOK, resp)
+}
+
+// HandleListDomain create domain
 func HandleListDomain(c *gin.Context) {
 	type paramsBody struct {
 		Domain string `json:"domain"`

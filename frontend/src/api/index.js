@@ -35,11 +35,10 @@ class APIManager {
       },
       error => {
         if (error.response) {
-          console.log('axios:' + error.response.status);
           switch (error.response.status) {
             case 401:
               // auth failed
-              store.commit('LOG_OUT');
+              sessionStorage.commit('LOG_OUT');
               router.replace({
                 path: 'Login',
                 query: {redirect: router.currentRoute.fullPath}
@@ -61,8 +60,21 @@ class APIManager {
     return this.$http.post("api/domain/create", { params: params })
   }
   listDomain(params) {
-    return this.$http.post("api/domain/list", { params: params })
+    return this.$http.post("api/domain/list", {params: params})
   }
+  deleteDomain(params) {
+    return this.$http.post("api/domain/delete", { params: params })
+  }
+  createUser(params) {
+    return this.$http.post("api/user/create", { params: params })
+  }
+  listUser(params) {
+    return this.$http.post("api/user/list", {params: params})
+  }
+  deleteUser(params) {
+    return this.$http.post("api/user/delete", { params: params })
+  }
+
 }
 
 export default new APIManager()

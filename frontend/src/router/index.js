@@ -5,6 +5,7 @@ import Home from '@/pages/Home'
 import Login from '@/pages/Login'
 import Dashboard from '@/pages/Dashboard'
 import Account from '@/pages/Account'
+import Domain from '@/pages/Domain'
 // import User from '@/pages/User'
 // import Config from '@/pages/Config'
 // import MailLog from '@/pages/MailLog'
@@ -21,9 +22,12 @@ export default new Router({
           path: '/',
           name: 'Dashboard',
           component: Dashboard
-        },
-        {
-          path: 'account',
+        }, {
+          path: 'domain',
+          name: 'Domain',
+          component: Domain
+        }, {
+          path: 'account/:domain/:ID',
           name: 'Account',
           component: Account
         },

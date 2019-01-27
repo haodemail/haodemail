@@ -11,7 +11,7 @@ func QueryDomainMX(domain string) (ipList []net.IP, err error) {
 	var timeout = make(chan bool, 1)
 
 	go func() {
-		time.Sleep(time.Second * time.Duration(1))
+		time.Sleep(time.Second * time.Duration(5))
 		timeout <- true
 	}()
 

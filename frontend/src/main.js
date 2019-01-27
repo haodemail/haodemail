@@ -9,6 +9,7 @@ import VueAxios from 'vue-axios'
 Vue.config.productionTip = false
 Vue.use(VueAxios, axios)
 Vue.use(iView)
+Vue.use(require('vue-moment'));
 
 
 // JWT AUTH，check TOKEN stored in localStorage

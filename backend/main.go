@@ -35,6 +35,10 @@ func main() {
 		// account manager
 		api.POST("/domain/create", controllers.HandleCreateDomain)
 		api.POST("/domain/list", controllers.HandleListDomain)
+		api.POST("/domain/delete", controllers.HandleDeleteDomain)
+		api.POST("/user/create", controllers.HandleCreateUser)
+		api.POST("/user/list", controllers.HandleListUser)
+		api.POST("/user/delete", controllers.HandleDeleteUser)
 	}
 
 	router.Run(models.Config.WebServer.Listen)
